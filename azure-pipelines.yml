@@ -1,0 +1,42 @@
+trigger:
+- master
+ 
+pool:
+ vmImage: windows-latest
+ 
+steps:
+- task: VisualStudioTestPlatformInstaller@1
+ inputs:
+   packageFeedSelector: 'nugetOrg'
+   versionSelector: 'latestPreRelease'
+ 
+- task: UseDotNet@2
+ inputs:
+   packageType: 'sdk'
+   version: '6.x'
+   includePreviewVersions: true
+ 
+- task: NuGetToolInstaller@1
+ inputs:
+   versionSpec: '5.9.0'
+   checkLatest: true
+ 
+- task: DotNetCoreCLI@2
+ inputs:
+   command: 'restore'
+   projects: '**/*.sln'
+   feedsToUse: 'select'
+ 
+- task: SonarCloudPrepare@1
+ inputs:
+   SonarCloud: 'SonarCloud'
+   organization: 'developement-work'
+   scannerMode: 'MSBuild'
+   projectKey: 'developement-work_devops'
+ 
+- task: DotNetCoreCLI@2
+ inputs:
+   command: 'build'
+   projects: 'dotnetcore/solution.sln'
+   arguments: '/nr:false' // this flag is important to avoid DLL lock for the 2nd build/analysis
+ 
